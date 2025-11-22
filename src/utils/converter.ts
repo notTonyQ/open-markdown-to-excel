@@ -1,21 +1,48 @@
 import { GridData } from '../types';
 
-export const parseMarkdownTable = (markdown: string): GridData => {
+export const parseMarkdownTable = (markdown: string, ignoreSeparatorLines: boolean = true): GridData => {
   const lines = markdown.trim().split('\n');
   const grid: GridData = [];
 
   for (const line of lines) {
-    // Check for separator line (contains dashes and pipes, e.g. |---|---|)
-    if (line.trim().match(/^\|?\s*:?-+:?\s*(\| \s*:?-+:?\s*)*\|?$/)) {
+    // Check for separator line with robust detection
+    const isSeparator = (() => {
+      const trimmed = line.trim();
+
+      // Quick exclusion: if contains characters other than | - : space → not a separator
+      if (/[^\s|\-:]/.test(trimmed)) return false;
+
+      // Parse into cells
+      const cells = trimmed.split('|')
+        .map(c => c.trim())
+        .filter(c => c.length > 0);
+
+      // If no cells found → not a separator
+      if (cells.length === 0) return false;
+
+      // Validate each cell: must be only hyphens and optional colons at start/end
+      const isValidCell = (cell: string) => {
+        const cellTrimmed = cell.trim();
+        // Match patterns: ---, :---, :---:, ---:
+        return /^-+$/.test(cellTrimmed) ||
+               /^:-+$/.test(cellTrimmed) ||
+               /^:-+:$/.test(cellTrimmed) ||
+               /^-+:$/.test(cellTrimmed);
+      };
+
+      return cells.every(isValidCell);
+    })();
+
+    if (isSeparator && ignoreSeparatorLines) {
       continue;
     }
-    
+
     // Split by pipe, filter empty start/end if they exist due to leading/trailing pipes
     const row = line.split('|');
-    
+
     // Clean up row
     let cleanRow = row.map(cell => cell.trim());
-    
+
     // Remove first/last empty elements if the markdown had outer pipes
     if (line.trim().startsWith('|') && cleanRow.length > 0 && cleanRow[0] === '') {
       cleanRow.shift();

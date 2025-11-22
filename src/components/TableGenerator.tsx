@@ -9,17 +9,16 @@ interface TableGeneratorProps {
 }
 
 const TableGenerator: React.FC<TableGeneratorProps> = ({ grid, setGrid }) => {
-  const [activeTab, setActiveTab] = useState<ExportFormat>(ExportFormat.EXCEL);
+  const [activeTab, setActiveTab] = useState<ExportFormat>(ExportFormat.JSON);
   const [sheetName, setSheetName] = useState('Sheet 1');
   const [previewContent, setPreviewContent] = useState('');
 
-  const tabs = Object.values(ExportFormat);
+  // Only show implemented formats: JSON, CSV (Excel hidden as it's actually CSV)
+  const tabs = [ExportFormat.JSON, ExportFormat.CSV];
 
   useEffect(() => {
-    // Update preview based on selection (Simulated for Excel/Binary types in this text-based view)
-    if (activeTab === ExportFormat.EXCEL) {
-       setPreviewContent(`(Excel File Preview Structure)\n\n[Worksheet: ${sheetName}]\n${gridToCSV(grid).replace(/,/g, '\t')}`);
-    } else if (activeTab === ExportFormat.CSV) {
+    // Update preview based on selection
+    if (activeTab === ExportFormat.CSV) {
         setPreviewContent(gridToCSV(grid));
     } else if (activeTab === ExportFormat.JSON) {
         const headers = grid[0];

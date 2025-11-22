@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { GridData } from '../types';
-import { Undo, Redo, ArrowLeftRight, Trash2, Eraser, GripHorizontal, Type, FileType, CaseLower, CaseUpper } from 'lucide-react';
+import { Undo, Redo, ArrowLeftRight, Trash2, Eraser, GripHorizontal, Type, FileType, CaseLower, CaseUpper, Copy, Clipboard } from 'lucide-react';
 
 interface TableEditorProps {
   grid: GridData;
@@ -8,6 +8,12 @@ interface TableEditorProps {
 }
 
 const TableEditor: React.FC<TableEditorProps> = ({ grid, setGrid }) => {
+  const [copiedRange, setCopiedRange] = useState<{startRow: number, startCol: number, endRow: number, endCol: number} | null>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectionStart, setSelectionStart] = useState<{row: number, col: number} | null>(null);
+  const [selectionEnd, setSelectionEnd] = useState<{row: number, col: number} | null>(null);
+  const [activeCell, setActiveCell] = useState<{row: number, col: number} | null>(null);
+
   const rows = grid.length;
   const cols = grid[0]?.length || 0;
 
@@ -22,11 +28,78 @@ const TableEditor: React.FC<TableEditorProps> = ({ grid, setGrid }) => {
     return label;
   };
 
+  const handleCellMouseDown = (r: number, c: number) => {
+    setIsSelecting(true);
+    setSelectionStart({ row: r, col: c });
+    setSelectionEnd({ row: r, col: c });
+    setActiveCell({ row: r, col: c });
+  };
+
+  const handleCellMouseEnter = (r: number, c: number) => {
+    if (isSelecting && selectionStart) {
+      setSelectionEnd({ row: r, col: c });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsSelecting(false);
+  };
+
+  const isCellSelected = (r: number, c: number) => {
+    if (!selectionStart || !selectionEnd) return false;
+
+    const minRow = Math.min(selectionStart.row, selectionEnd.row);
+    const maxRow = Math.max(selectionStart.row, selectionEnd.row);
+    const minCol = Math.min(selectionStart.col, selectionEnd.col);
+    const maxCol = Math.max(selectionStart.col, selectionEnd.col);
+
+    return r >= minRow && r <= maxRow && c >= minCol && c <= maxCol;
+  };
+
   const updateCell = (r: number, c: number, value: string) => {
     const newGrid = [...grid];
     newGrid[r] = [...newGrid[r]];
     newGrid[r][c] = value;
     setGrid(newGrid);
+  };
+
+  const copySelection = async () => {
+    if (!selectionStart || !selectionEnd) return;
+
+    const minRow = Math.min(selectionStart.row, selectionEnd.row);
+    const maxRow = Math.max(selectionStart.row, selectionEnd.row);
+    const minCol = Math.min(selectionStart.col, selectionEnd.col);
+    const maxCol = Math.max(selectionStart.col, selectionEnd.col);
+
+    const selectedData: string[][] = [];
+    for (let r = minRow; r <= maxRow; r++) {
+      const rowData: string[] = [];
+      for (let c = minCol; c <= maxCol; c++) {
+        rowData.push(grid[r][c]);
+      }
+      selectedData.push(rowData);
+    }
+
+    const tsvData = selectedData.map(row => row.join('\t')).join('\n');
+
+    try {
+      await navigator.clipboard.writeText(tsvData);
+      setCopiedRange({ startRow: minRow, startCol: minCol, endRow: maxRow, endCol: maxCol });
+      setTimeout(() => setCopiedRange(null), 1000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const copyAll = async () => {
+    try {
+      const tsvData = grid.map(row => row.join('\t')).join('\n');
+      await navigator.clipboard.writeText(tsvData);
+      setCopiedRange({ startRow: 0, startCol: 0, endRow: grid.length - 1, endCol: grid[0].length - 1 });
+      setTimeout(() => setCopiedRange(null), 1000);
+    } catch (err) {
+      console.error('Failed to copy all:', err);
+    }
   };
 
   const handleTranspose = () => {
@@ -78,6 +151,11 @@ const TableEditor: React.FC<TableEditorProps> = ({ grid, setGrid }) => {
           <span className="text-sm text-blue-500 font-medium bg-blue-50 px-2 py-0.5 rounded-full">
             {rows} × {cols}
           </span>
+          {copiedRange && (
+            <span className="text-sm text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full">
+              ✓ Copied
+            </span>
+          )}
         </div>
         <div className="flex gap-2">
            {/* Window controls mockup */}
@@ -89,7 +167,29 @@ const TableEditor: React.FC<TableEditorProps> = ({ grid, setGrid }) => {
       <div className="flex flex-col lg:flex-row h-[500px]">
         {/* Toolbar */}
         <div className="w-full lg:w-64 border-r border-slate-200 p-4 flex flex-wrap lg:flex-col gap-3 overflow-y-auto bg-slate-50/50">
-            
+
+            <div className="grid grid-cols-3 gap-2 w-full">
+                <button
+                    onClick={copySelection}
+                    disabled={!selectionStart || !selectionEnd}
+                    className="flex flex-col items-center justify-center p-2 bg-white border border-blue-200 rounded-lg text-blue-600 hover:bg-blue-50 text-xs gap-1 h-16 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <Copy size={18} /> Copy
+                </button>
+                <button
+                    onClick={copyAll}
+                    className="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 text-xs gap-1 h-16"
+                >
+                    <Copy size={18} /> Copy All
+                </button>
+                <button
+                    onClick={handleTranspose}
+                    className="flex flex-col items-center justify-center p-2 bg-white border border-blue-200 rounded-lg text-blue-600 hover:bg-blue-50 text-xs gap-1 h-16"
+                >
+                    <ArrowLeftRight size={18} className="rotate-90" /> Transpose
+                </button>
+            </div>
+
             <div className="grid grid-cols-3 gap-2 w-full">
                 <button className="flex flex-col items-center justify-center p-2 bg-white border border-blue-200 rounded-lg text-blue-600 hover:bg-blue-50 text-xs gap-1 h-16">
                     <Undo size={18} /> Undo
@@ -127,11 +227,11 @@ const TableEditor: React.FC<TableEditorProps> = ({ grid, setGrid }) => {
             </div>
 
             <div className="w-full mt-2">
-                <input 
-                    placeholder="Find & Replace..." 
+                <input
+                    placeholder="Find & Replace..."
                     className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs mb-2 focus:outline-none focus:border-blue-400"
                 />
-                 <button className="w-full py-1.5 border border-blue-200 rounded-full text-blue-500 text-xs font-medium hover:bg-blue-50">
+                <button className="w-full py-1.5 border border-blue-200 rounded-full text-blue-500 text-xs font-medium hover:bg-blue-50">
                     Replace All
                 </button>
             </div>
@@ -157,11 +257,19 @@ const TableEditor: React.FC<TableEditorProps> = ({ grid, setGrid }) => {
                          {rowIndex + 1}
                      </div>
                      {row.map((cell, colIndex) => (
-                         <input 
+                         <input
                             key={`${rowIndex}-${colIndex}`}
                             value={cell}
                             onChange={(e) => updateCell(rowIndex, colIndex, e.target.value)}
-                            className="w-32 h-8 px-2 border-r border-b border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:z-10 bg-white truncate"
+                            onMouseDown={() => handleCellMouseDown(rowIndex, colIndex)}
+                            onMouseEnter={() => handleCellMouseEnter(rowIndex, colIndex)}
+                            onMouseUp={handleMouseUp}
+                            className={`
+                              w-32 h-8 px-2 border-r border-b text-sm text-slate-800 focus:outline-none focus:z-10 truncate
+                              ${isCellSelected(rowIndex, colIndex)
+                                ? 'bg-blue-100 border-blue-400'
+                                : 'bg-white border-slate-200 focus:ring-2 focus:ring-blue-500'}
+                            `}
                          />
                      ))}
                  </div>
