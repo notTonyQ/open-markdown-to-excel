@@ -1,9 +1,6 @@
-<div align="center">
 # Open Markdown Table to Excel Converter
 
 A powerful, open-source web application that converts Markdown tables to Excel format with an integrated spreadsheet editor and AI-powered table formatting.
-
-</div>
 
 ## ✨ Features
 
