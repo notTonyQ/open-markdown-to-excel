@@ -1,5 +1,7 @@
 # Open Markdown Table to Excel Converter
 
+**English** | [简体中文](README.zh-CN.md)
+
 A powerful, open-source web application that converts Markdown tables to Excel format with an integrated spreadsheet editor and AI-powered table formatting.
 
 ## ✨ Features
@@ -64,6 +66,47 @@ npm run build
 
 ```bash
 npm run preview
+```
+
+### Deploy to Cloudflare Pages (Quick Deploy)
+
+**One-Click Deploy (Recommended)**
+
+1. Fork this repository on GitHub
+2. Log in to [Cloudflare Dashboard](https://dash.cloudflare.com/)
+3. Go to **Workers & Pages** → **Create application** → **Pages** → **Connect to Git**
+4. Select your forked repository
+5. In build settings:
+   - **Build command**: `npm run build`
+   - **Build output directory**: `dist`
+6. Click **Save and Deploy**
+
+Your site will be live at `https://your-project.pages.dev`!
+
+**Manual Deploy (Using Wrangler)**
+
+```bash
+# Install Wrangler
+npm install -g wrangler
+
+# Login to Cloudflare
+wrangler login
+
+# Deploy to Pages
+wrangler pages deploy dist --project-name=open-markdown-to-excel
+```
+
+**Configuration**
+
+A `wrangler.jsonc` is already included:
+```json
+{
+  "name": "open-markdown-to-excel",
+  "compatibility_date": "2025-11-22",
+  "assets": {
+    "directory": "./dist"
+  }
+}
 ```
 
 ## 🎮 How to Use
