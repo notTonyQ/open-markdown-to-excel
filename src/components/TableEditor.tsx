@@ -164,11 +164,6 @@ const TableEditor: React.FC<TableEditorProps> = ({ grid, setGrid }) => {
             </span>
           )}
         </div>
-        <div className="flex gap-2">
-           {/* Window controls mockup */}
-           <div className="text-blue-500 cursor-pointer">−</div>
-           <div className="text-blue-500 cursor-pointer">⤢</div>
-        </div>
       </div>
 
       <div className="flex flex-col lg:flex-row h-[500px]">
@@ -237,7 +232,7 @@ const TableEditor: React.FC<TableEditorProps> = ({ grid, setGrid }) => {
                 </button>
             </div>
 
-            <div className="w-full mt-2">
+            {/* <div className="w-full mt-2">
                 <input
                     placeholder="Find & Replace..."
                     className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs mb-2 focus:outline-none focus:border-blue-400"
@@ -245,7 +240,7 @@ const TableEditor: React.FC<TableEditorProps> = ({ grid, setGrid }) => {
                 <button className="w-full py-1.5 border border-blue-200 rounded-full text-blue-500 text-xs font-medium hover:bg-blue-50">
                     Replace All
                 </button>
-            </div>
+            </div> */}
         </div>
 
         {/* Spreadsheet Grid */}
@@ -285,9 +280,6 @@ const TableEditor: React.FC<TableEditorProps> = ({ grid, setGrid }) => {
                      ))}
                  </div>
              ))}
-          </div>
-          <div className="absolute bottom-1 right-1 text-xs text-slate-400 italic p-1">
-            data grid by DataGridXL
           </div>
         </div>
       </div>
