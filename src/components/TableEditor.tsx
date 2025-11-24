@@ -139,6 +139,13 @@ const TableEditor: React.FC<TableEditorProps> = ({ grid, setGrid }) => {
     setGrid(newGrid);
   };
 
+  const removeMarkdownFormatting = () => {
+    const newGrid = grid.map(row =>
+      row.map(cell => cell.replace(/[*_~]/g, ''))
+    );
+    setGrid(newGrid);
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-6">
       {/* Header */}
@@ -197,8 +204,12 @@ const TableEditor: React.FC<TableEditorProps> = ({ grid, setGrid }) => {
                 <button className="flex flex-col items-center justify-center p-2 bg-white border border-blue-200 rounded-lg text-blue-600 hover:bg-blue-50 text-xs gap-1 h-16">
                     <Redo size={18} /> Redo
                 </button>
-                <button onClick={handleTranspose} className="flex flex-col items-center justify-center p-2 bg-white border border-blue-200 rounded-lg text-blue-600 hover:bg-blue-50 text-xs gap-1 h-16">
-                    <ArrowLeftRight size={18} className="rotate-90" /> Transpose
+                <button
+                  onClick={removeMarkdownFormatting}
+                  className="flex flex-col items-center justify-center p-2 bg-white border border-blue-200 rounded-lg text-blue-600 hover:bg-blue-50 text-xs gap-1 h-16"
+                  title="Remove markdown formatting (*, _, ~)"
+                >
+                    <Type size={18} /> Clean Format
                 </button>
             </div>
 
